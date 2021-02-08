@@ -19,47 +19,80 @@ const Modal = {
     }
 }
 
-const transactions = [
-    {
-        id: 1,
-        description: 'Luz',
-        amount: -50001,
-        date: '23/01/2021',
-    },
-    {
-        id: 2,
-        description: 'Website',
-        amount: 50000,
-        date: '23/01/2021',
-    },
-    {
-        id: 3,
-        description: 'Internet',
-        amount: -20012,
-        date: '23/01/2021',
-    },
-    {
-        id: 4,
-        description: 'App',
-        amount: 20000,
-        date: '23/01/2021',
-    },
-]
-
 //Eu preciso somar as entradas;
 //Depois eu preciso somar as saídas e;
 //Remover das entradas o valor das saídas;
 //Assim eu terei o total
 
 const Transaction = {
+    all: [
+        {
+            
+            description: 'Luz',
+            amount: -50001,
+            date: '23/01/2021',
+        },
+        {
+            
+            description: 'Website',
+            amount: 500000,
+            date: '23/01/2021',
+        },
+        {
+            
+            description: 'Internet',
+            amount: -20012,
+            date: '23/01/2021',
+        },
+        {
+            
+            description: 'App',
+            amount: 200000,
+            date: '23/01/2021',
+        },
+    ],
+
+    add(transaction){
+        Transaction.all.push(transaction)
+
+        App.reload()
+    },
+
+     remove(index){
+        Transaction.all.splice(index, 1)
+
+        App.reload()
+     },
+
     incomes(){
         //somar as entradas
+        //pegar todas as transações
+        let income = 0;
+        //para cada transação,
+        Transaction.all.forEach(transaction => {
+            //ver se ela for > 0 
+            if (transaction.amount > 0) {
+                //somar a uma variavel e retornar a variavel
+                income += transaction.amount;                
+            }
+            
+        })
+        return income;
     },
     expenses(){
         //somar as saídas
+        let expense = 0;
+        Transaction.all.forEach(transaction => {
+            if (transaction.amount < 0 ) {
+                //subtrair o valor e retornar
+                expense += transaction.amount;
+                
+            }
+        })
+        return expense;
     },
     total(){
-        //entradas - saídas
+        return Transaction.incomes() + Transaction.expenses();       
     }
 }
 
@@ -85,7 +118,6 @@ const DOM = {
 
         const amount = Utils.formatCurrency(transaction.amount)
 
-
         const html = `        
         <td class="description">${transaction.description}</td>
         <td class="${CSSclass}">${amount}</td>
@@ -95,6 +127,21 @@ const DOM = {
         </td>              
         `
         return html
+    },
+
+    updateBalance() {
+        document
+            .getElementById('incomeDisplay')
+            .innerHTML = Utils.formatCurrency(Transaction.incomes())
+        document
+            .getElementById('expenseDisplay')
+            .innerHTML = Utils.formatCurrency(Transaction.expenses())
+        document
+            .getElementById('totalDisplay')
+            .innerHTML = Utils.formatCurrency(Transaction.total())
+    },
+    clearTransactions() {
+        DOM.transactionsContainer.innerHTML = ""
     }
 }
 const Utils = {
@@ -103,7 +150,7 @@ const Utils = {
 
     const signal = Number(value) < 0 ? "-": ""
 
-    value = String(value).replace(/\D/g, "")
+    value = String(value).replace(/\D/g, "") //corrigir na aula 4
 
     value = Number(value) / 100
 
@@ -113,13 +160,61 @@ const Utils = {
     })
 
     return signal + value
-
     }
 }
 
+const Form = {
+    description: document.querySelector('input#description'),
+    amount: document.querySelector('input#amount'),
+    date: document.querySelector('input#date'),
 
-DOM.addTransaction(transactions[0])
+    getValues(){
+        return {
+            description: Form.description.value,
+            amount: Form.amount.value,
+            date:Form.date.value
+        }
+    },
 
-transactions.forEach(function(transaction){
-    DOM.addTransaction(transaction)
-})
+    formatData(){
+        console.log('Formatar os dados');
+    },
+    validateFields() {
+        const { description, amount, date} = Form.getValues()
+        // console.log(Form.getValues());
+        if (description.tim()=== "" || ) {
+            
+        }
+    
+    },
+    submit(event) {
+        // console.log(event);
+        event.preventDefault()
+        // verificar se tadas as informações foram preenchidas
+        Form.validateFields() //validar os campos
+        //formatar os dados para salvar
+        // Form.formatData()
+        //salvar
+        //apagar os dados do formulário
+        //modal feche
+        //Atualizar a aplicação
+    }
+}
+
+const App = {
+    init() { Transaction.all.forEach(transaction => {
+        DOM.addTransaction(transaction)
+    })
+    DOM.updateBalance()
+    
+    },
+    reload() {
+        DOM.clearTransactions()
+        App.init()
+    },
+}
+App.init()
+
+// Transaction.remove(0)
+
+// DOM.addTransaction(transactions[0])
