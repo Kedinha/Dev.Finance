@@ -24,8 +24,22 @@ const Modal = {
 //Remover das entradas o valor das saídas;
 //Assim eu terei o total
 
+const Storage = {
+    get() {
+        // console.log(localStorage);
+        return JSON.parse(localStorage.getItem("dev.finances:transations")) || []
+    },
+
+    set(transactions) {
+        localStorage.setItem("dev.finances:transactions", 
+        JSON.stringify(transactions))
+    }
+}
+
+
 const Transaction = {
-    all: [
+    all: Storage.get(),
+    /* [
         {
             
             description: 'Luz',
@@ -50,7 +64,7 @@ const Transaction = {
             amount: 200000,
             date: '23/01/2021',
         },
-    ],
+    ], */
 
     add(transaction){
         Transaction.all.push(transaction)
@@ -108,12 +122,14 @@ const DOM = {
         // console.log(transaction);
 
         const tr = document.createElement('tr')
-        tr.innerHTML = DOM.innerHTMLTransaction(transaction)
+        tr.innerHTML = DOM.innerHTMLTransaction(transaction, index)
         // console.log(transaction);
+        tr.dataset.index = index
 
         DOM.transactionsContainer.appendChild(tr)
     },
-    innerHTMLTransaction(transaction){
+
+    innerHTMLTransaction(transaction, index){
         const CSSclass = transaction.amount > 0 ? "income" : "expense"
 
         const amount = Utils.formatCurrency(transaction.amount)
@@ -123,7 +139,7 @@ const DOM = {
         <td class="${CSSclass}">${amount}</td>
         <td class="date"${transaction.date}</td>
         <td>
-            <img src="./assets/minus.svg" alt="Remover Transação">
+            <img onclick="Transaction.remove(${index})" src="./assets/minus.svg" alt="Remover Transação">
         </td>              
         `
         return html
@@ -145,6 +161,20 @@ const DOM = {
     }
 }
 const Utils = {
+    formatAmount(value) {
+        value = Number(value) * 100
+        // console.log(value);
+        return value
+    },
+
+    formatDate(date) {
+        // console.log(date);
+        const splittedDate = date.split("-") // split remove o argumento
+
+        return `${splittedDate[2]}/${splittedDate[1]}/${splittedDate[0]}`
+    },
+
+
     formatCurrency(value){
         // console.log(value);
 
@@ -172,44 +202,84 @@ const Form = {
         return {
             description: Form.description.value,
             amount: Form.amount.value,
-            date:Form.date.value
+            date: Form.date.value
         }
     },
 
-    formatData(){
-        console.log('Formatar os dados');
-    },
     validateFields() {
         const { description, amount, date} = Form.getValues()
         // console.log(Form.getValues());
-        if (description.trim() === "" || 
-            amount.trim() == "" ||
+        if (description.trim() === "" || //trim limpeza dos espaços vazios
+            amount.trim() === "" ||
             date.trim() === "" ) {
-            throw new Error ("Por favor, preencha todos os campos")
-        }
-    
+            throw new Error ("Por favor, preencha todos os campos!")
+        }    
     },
+
+    formatValues() {
+        let { description, amount, date} = Form.getValues()
+
+        amount = Utils.formatAmount(amount)
+
+        date = Utils.formatDate(date)
+
+        // console.log(date);
+
+        return {
+            description,
+            amount,
+            date
+        }
+    },
+
+    saveTransaction(transaction){
+        Transaction.add(transaction)
+    },
+
+    clearFields(){
+        Form.description.value = ""
+        Form.amount.value = ""
+        Form.date.value = ""
+    },
+
     submit(event) {
         // console.log(event);
         event.preventDefault()
-        // verificar se tadas as informações foram preenchidas
+
+        try {
+        // verificar se todas as informações foram preenchidas
         Form.validateFields() //validar os campos
         //formatar os dados para salvar
-        // Form.formatData()
+        const transaction = Form.formatValues()
         //salvar
+        Form.saveTransaction(transaction)
         //apagar os dados do formulário
+        Form.clearFields()
         //modal feche
+        Modal.close()
         //Atualizar a aplicação
+        // App.reload() já existe o reload no add
+        } catch (error) {
+            alert(error.message)
+        }
     }
 }
 
+
+// Storage.set("HEllo")
+Storage.get()
+
 const App = {
-    init() { Transaction.all.forEach(transaction => {
-        DOM.addTransaction(transaction)
+    init() { 
+    Transaction.all.forEach((transaction, index) => {
+        DOM.addTransaction(transaction, index)
     })
     DOM.updateBalance()
+
+    Storage.set(Transaction.all)
     
     },
+    
     reload() {
         DOM.clearTransactions()
         App.init()
