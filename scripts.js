@@ -164,7 +164,7 @@ const Utils = {
     formatAmount(value) {
         value = Number(value) * 100
         // console.log(value);
-        return value
+        return Math.round(value)
     },
 
     formatDate(date) {
@@ -179,8 +179,9 @@ const Utils = {
         // console.log(value);
 
     const signal = Number(value) < 0 ? "-": ""
+    //     value = value.replace(/\,?\.?/g, "") * 100
 
-    value = String(value).replace(/\D/g, "") //corrigir na aula 4
+    // value = String(value).replace(/\D/g, "") //corrigido na aula 4
 
     value = Number(value) / 100
 
@@ -279,7 +280,7 @@ const App = {
     Storage.set(Transaction.all)
     
     },
-    
+
     reload() {
         DOM.clearTransactions()
         App.init()
